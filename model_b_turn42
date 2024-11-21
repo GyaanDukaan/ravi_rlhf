@@ -1,0 +1,98 @@
+#include <iostream>
+#include <fstream>
+#include <string>
+
+// Boost.Serialization
+#include <boost/archive/text_iarchive.hpp>
+#include <boost/archive/text_oarchive.hpp>
+#include <boost/serialization/access.hpp>
+#include <boost/serialization/nvp.hpp>
+
+// Boost.Property Tree
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
+
+// Protocol Buffers
+#include <google/protobuf/message.h>
+#include <google/protobuf/util/json_util.h>
+
+using namespace std;
+
+// Data structure to serialize
+struct Person {
+    std::string name;
+    int age;
+
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int version)
+    {
+        ar & BOOST_SERIALIZATION_NVP(name);
+        ar & BOOST_SERIALIZATION_NVP(age);
+    }
+};
+
+// Message definition using Protocol Buffers
+class Message : public ::google::protobuf::Message {
+ public:
+  Message() {}
+  virtual ~Message() {}
+
+  virtual const char* MessageName() const {
+    return "Message";
+  }
+
+  // Fields
+  void set_name(const std::string& value) {
+    name_ = value;
+  }
+  const std::string& name() const {
+    return name_;
+  }
+  void set_age(int value) {
+    age_ = value;
+  }
+  int age() const {
+    return age_;
+  }
+
+ private:
+  std::string name_;
+  int age_;
+
+  // Protocol Buffers meta-data
+  GOOGLE_DISALLOW_EVIL_CONSTRUCTORS(Message);
+};
+
+// Serialization strategy 1: Binary using Boost.Serialization
+void binarySerialization(const Person& person, const string& filename) {
+    ofstream ofs(filename, ios::binary);
+    boost::archive::text_oarchive oa(ofs);
+    oa << person;
+}
+
+Person binaryDeserialization(const string& filename) {
+    ifstream ifs(filename, ios::binary);
+    boost::archive::text_iarchive ia(ifs);
+    Person person;
+    ia >> person;
+    return person;
+}
+
+// Serialization strategy 2: Text using Boost.Property Tree
+void textSerialization(const Person& person, const string& filename) {
+    boost::property_tree::ptree pt;
+    pt.put("name", person.name);
+    pt.put("age", person.age);
+    boost::property_tree::write_json(filename, pt);
+}
+
+Person textDeserialization(const string& filename) {
+    boost::property_tree::ptree pt;
+    boost::property_tree::read_json(filename, pt);
+    Person person;
+    person.name = pt.get<std::string>("name");
+    person.age = pt.get<int>("age");
+    return person;
+}
+
+// Serialization strategy 3: Message using Protocol Buffers

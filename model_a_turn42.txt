@@ -1,0 +1,30 @@
+#include <iostream>
+#include <nlohmann/json.hpp>
+
+using json = nlohmann::json;
+
+json CreateJson() {
+    json example;
+    example["id"] = 123;
+    example["name"] = "JSON Example";
+    example["nested"] = json::object();
+    example["nested"]["value"] = 456;
+    return example;
+}
+
+int main() {
+    // Create a JSON object
+    json example = CreateJson();
+
+    // Serialize the JSON to a string
+    std::string serialized_data = example.dump();
+    std::cout << "Serialized JSON: " << serialized_data << std::endl;
+
+    // Deserialize the JSON
+    json example2 = json::parse(serialized_data);
+    std::cout << "Deserialized JSON: ID = " << example2["id"]
+              << ", Name = " << example2["name"]
+              << ", Nested Value = " << example2["nested"]["value"] << std::endl;
+
+    return 0;
+}

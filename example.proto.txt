@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package example;
+
+message Example {
+    int32 id = 1;
+    string name = 2;
+    NestedMessage nested = 3;
+}
+
+message NestedMessage {
+    int32 value = 1;
+}
